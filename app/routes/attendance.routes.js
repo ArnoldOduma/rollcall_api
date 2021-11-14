@@ -1,8 +1,11 @@
+const auth = require("../middleware/auth");
+const express = require('express');
+const router = express.Router();
+
 module.exports = app => {
     const attendance = require("../controllers/attendance.controller");
-
+    app.use(auth);
     app.post("/attendance", attendance.create);
-
     // // List all attendance
     app.get("/attendance", attendance.findAll);
     //
@@ -22,4 +25,6 @@ module.exports = app => {
     //
     // // AUTHENTICATION
     // app.post("/login", users.login);
+
+    app.use('/', router)
 };

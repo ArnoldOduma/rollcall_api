@@ -16,16 +16,19 @@ const User = function (user) {
 };
 
 User.login = (email, password, result) => {
-
     sql.query(`USE rollcall;`);
     if (email && password) {
-        sql.query('SELECT * FROM users WHERE email = ?', [email], async (err, res, fields) => {
+        sql.query(`
+        SELECT *, s.name As semester  FROM users u
+        LEFT  JOIN semester s ON s.id = u.current_sem_id
+        WHERE email = ?`, [email], async (err, res) => {
             if (err) {
                 console.log("error: ", err);
                 result(err, null);
                 return;
             }
             if (res.length > 0) {
+                console.log(res);
                 const comparison = await bcrypt.compare(password, res[0].password);
                 if (comparison) {
                     const apiResponse = new ApiResponse(
@@ -54,9 +57,77 @@ User.login = (email, password, result) => {
     }
 };
 
+User.loginNew = async (email, password, result) => {
+    sql.query(`USE rollcall;`);
+
+    // Validate if user exist in our database
+    await User.findByEmail(email, async (err, res) => {
+        if (res) {
+            if (await bcrypt.compare(password, res.password)) {
+                const apiResponse = new ApiResponse(
+                    'You have successfully logged in',
+                    200,
+                    res
+                );
+                result(null, apiResponse);
+            } else {
+                result(null, new ApiResponse(
+                    'Email and password do not match',
+                    204
+                ));
+            }
+        } else {
+            console.log("error: ", err);
+            result(err, null);
+        }
+    });
+
+
+    // if (email && password) {
+    //     sql.query(`
+    //     SELECT *, s.name As semester  FROM users u
+    //     LEFT  JOIN semester s ON s.id = u.current_sem_id
+    //     WHERE email = ?`, [email], async (err, res) => {
+    //         if (err) {
+    //             console.log("error: ", err);
+    //             result(err, null);
+    //             return;
+    //         }
+    //         if (res.length > 0) {
+    //             console.log(res);
+    //             const comparison = await bcrypt.compare(password, res[0].password);
+    //             if (comparison) {
+    //                 const apiResponse = new ApiResponse(
+    //                     'You have successfully logged in',
+    //                     200,
+    //                     res[0]
+    //                 );
+    //                 result(null, apiResponse);
+    //
+    //             } else {
+    //                 result(null, new ApiResponse(
+    //                     'Email and password do not match',
+    //                     204
+    //                 ));
+    //             }
+    //         } else {
+    //             result({kind: "not_found"}, null);
+    //         }
+    //     });
+    // } else {
+    //     result(null, new ApiResponse(
+    //         'Please enter a username ans password',
+    //         400
+    //     ));
+    //
+    // }
+};
+
 User.create = async (newStudent, result) => {
     const password = newStudent.password;
-    newStudent.password = await bcrypt.hash(password, saltRounds);
+    if (password) {
+        newStudent.password = await bcrypt.hash(password, saltRounds);
+    }
     sql.query(`USE rollcall;`);
     sql.query('INSERT INTO users SET ?', newStudent, (err, res) => {
         if (err) {
@@ -95,11 +166,30 @@ User.findById = (studentId, result) => {
         }
 
         if (res.length) {
-            console.log("found student: ", res[0]);
+            console.log("found user: ", res[0]);
             result(null, res[0]);
             return;
         }
 
+        // not found Customer with the id
+        result({kind: "not_found"}, null);
+    });
+};
+
+User.findByEmail = (email, result) => {
+    sql.query(`USE rollcall;`);
+    sql.query(`SELECT * FROM users WHERE email = ?`, [email], (err, res) => {
+        if (err) {
+            console.log("error: ", err);
+            result(err, null);
+            return;
+        }
+
+        if (res.length) {
+            console.log("found user: ", res[0]);
+            result(null, res[0]);
+            return res[0];
+        }
         // not found Customer with the id
         result({kind: "not_found"}, null);
     });
@@ -159,7 +249,7 @@ User.remove = (id, result) => {
             return;
         }
 
-        console.log("deleted student with id: ", id);
+        console.log("deleted user with id: ", id);
         result(null, res);
     });
 };

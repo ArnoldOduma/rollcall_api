@@ -1,30 +1,36 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-
+const cookieParser = require('cookie-parser');
 const session = require('express-session');
-
 
 
 // create express app
 const app = express();
 
-const corsOptions = {
-    origin: "http://localhost:3000"
-};
 
+const oneDay = 1000 * 60 * 60 * 24;
 app.use(session({
-    secret: 'secret',
+    secret: 'secretsecretsessionnkeys',
+    cookie: {maxAge: oneDay},
     resave: true,
     saveUninitialized: true
 }));
+
+const corsOptions = {
+    origin: "http://localhost:5050"
+};
 app.use(cors(corsOptions));
 
-// parse requests of content-type - application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({extended: true}));
-
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+// // parse requests of content-type - application/x-www-form-urlencoded
+// app.use(bodyParser.urlencoded({extended: true}));
 // parse requests of content-type - application/json
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
+
+app.use(cookieParser());
+
 
 // define a simple route
 app.get('/', (req, res) => {

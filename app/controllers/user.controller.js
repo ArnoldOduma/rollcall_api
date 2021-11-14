@@ -1,4 +1,10 @@
 const User = require("../models/user.model");
+const jwt = require('jsonwebtoken');
+const auth = require("../middleware/auth");
+require("dotenv").config();
+const ApiResponse = require('../classes/responseFormat.class');
+
+let session;
 
 // Create and Save a new Customer
 exports.login = (req, res) => {
@@ -9,23 +15,39 @@ exports.login = (req, res) => {
         });
     }
 
-    User.login(req.body.email, req.body.password, (err, data) => {
-        console.log(err, data);
+    User.loginNew(req.body.email, req.body.password, (err, data) => {
         if (err) {
             if (err.kind === "not_found") {
-                res.status(404).send({
-                    message: `User with email ${req.body.email} was not found.`,
-                    code: 404
-                });
+                res.status(404).send(new ApiResponse(
+                    `User with email ${req.body.email} was not found.`,
+                    404
+                ))
             } else {
-                res.status(500).send({
-                    message: "Error retrieving Student with email " + req.params.email,
-                    code: 500
-                });
+                res.status(500).send(new ApiResponse(
+                    "Error retrieving user with email " + req.params.email,
+                    500
+                ));
             }
-        } else
+        } else {
+            session = req.session;
+            session.userCode = data.data ? data.data.id : null;
+            session.userid = req.body.email;
+            // Create token
+            if (data.data) {
+                data.token = jwt.sign(
+                    {
+                        user_id: data.data.id,
+                        user_name: data.data.fname + ' ' + data.data.lname,
+                    },
+                    process.env.TOKEN_KEY,
+                    {
+                        expiresIn: "24h",
+                    }
+                );
+            }
             res.send(data);
-    });
+        }
+    }).then();
 };
 
 // Create and Save a new Customer
@@ -36,6 +58,7 @@ exports.create = (req, res) => {
             message: "Content can not be empty!"
         });
     }
+
 
     // Create a Customer
     const user = new User({
@@ -49,6 +72,7 @@ exports.create = (req, res) => {
         user_type: req.body.user_type,
         registration_number: req.body.registration_number
     });
+
 
     // Save Customer in the database
     User.create(user, (err, data) => {

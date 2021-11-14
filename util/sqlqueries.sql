@@ -35,6 +35,7 @@ CREATE TABLE attendance (
     user_id int,
     time_in time NOT NULL,
     time_out time NOT NULL,
+    date DATE NOT NULL,
     semester_id int NOT NULL,
     class_id int NOT NULL,
     CONSTRAINT FK_semesters_id FOREIGN KEY (semester_id)

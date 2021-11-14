@@ -34,7 +34,16 @@ Classes.create = async (newAttendance, result) => {
 
 Classes.getAll = result => {
     sql.query(`USE rollcall;`);
-    let select = `SELECT * FROM classes`;
+    // let select = `SELECT *, users.fname AS lecturer_first_name FROM classes
+    // JOIN users ON users.id = classes.lecturer_id`;
+
+    let select = `
+    SELECT c.id, c.title, c.class_code, c.start_time, c.end_time, c.venue, c.lecture_day, u.fname As lecturer_fname, u.lname As lecturer_lname, u.id As lecturer_id, s.id As sem_id, s.number As sem_number, s.name As sem_name
+    FROM classes c
+    JOIN users u ON u.id = c.lecturer_id
+    JOIN semester s ON s.id = c.semester_id
+    `;
+
     sql.query(select, (err, res) => {
         if (err) {
             console.log("error: ", err);
