@@ -253,7 +253,6 @@ User.removeAll = result => {
             result(null, err);
             return;
         }
-
         console.log(`deleted ${res.affectedRows} users`);
         result(null, res);
     });
