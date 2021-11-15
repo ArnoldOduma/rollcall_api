@@ -14,9 +14,8 @@ const Classes = function (classes) {
     this.lecture_day = classes.lecture_day;
 };
 
-Classes.create = async (newAttendance, result) => {
-    sql.query(`USE rollcall;`);
-    sql.query('INSERT INTO classes SET ?', newAttendance, (err, res) => {
+Classes.create = async (newClass, result) => {
+    sql.query('INSERT INTO classes SET ?', newClass, (err, res) => {
         if (err) {
             console.log('Error', err);
             result(err, null);
@@ -26,14 +25,13 @@ Classes.create = async (newAttendance, result) => {
         result(null, new ApiResponse(
             'Class added successfully',
             200,
-            newAttendance
+            newClass
         ));
     });
 };
 
 
 Classes.getAll = result => {
-    sql.query(`USE rollcall;`);
     // let select = `SELECT *, users.fname AS lecturer_first_name FROM classes
     // JOIN users ON users.id = classes.lecturer_id`;
 

@@ -13,7 +13,6 @@ const Attendance = function (attendance) {
 };
 
 Attendance.create = async (newAttendance, result) => {
-    sql.query(`USE rollcall;`);
     let select = `
         SELECT * FROM attendance
         WHERE date = ? AND class_id = ? AND user_id = ?`;

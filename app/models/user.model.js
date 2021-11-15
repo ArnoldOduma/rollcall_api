@@ -16,7 +16,6 @@ const User = function (user) {
 };
 
 User.login = (email, password, result) => {
-    sql.query(`USE rollcall;`);
     if (email && password) {
         sql.query(`
         SELECT *, s.name As semester  FROM users u
@@ -58,7 +57,6 @@ User.login = (email, password, result) => {
 };
 
 User.loginNew = async (email, password, result) => {
-    sql.query(`USE rollcall;`);
 
     // Validate if user exist in our database
     await User.findByEmail(email, async (err, res) => {
@@ -128,7 +126,6 @@ User.create = async (newStudent, result) => {
     if (password) {
         newStudent.password = await bcrypt.hash(password, saltRounds);
     }
-    sql.query(`USE rollcall;`);
     sql.query('INSERT INTO users SET ?', newStudent, (err, res) => {
         if (err) {
             console.log('Error', err);
@@ -142,7 +139,6 @@ User.create = async (newStudent, result) => {
 };
 
 User.getAll = result => {
-    sql.query(`USE rollcall;`);
     let select = `SELECT * FROM users`;
     sql.query(select, (err, res) => {
         if (err) {
@@ -157,7 +153,6 @@ User.getAll = result => {
 };
 
 User.findById = (studentId, result) => {
-    sql.query(`USE rollcall;`);
     sql.query(`SELECT * FROM users WHERE id = ${studentId}`, (err, res) => {
         if (err) {
             console.log("error: ", err);
@@ -177,7 +172,6 @@ User.findById = (studentId, result) => {
 };
 
 User.findByEmail = (email, result) => {
-    sql.query(`USE rollcall;`);
     sql.query(`SELECT * FROM users WHERE email = ?`, [email], (err, res) => {
         if (err) {
             console.log("error: ", err);
@@ -196,7 +190,6 @@ User.findByEmail = (email, result) => {
 };
 
 User.updateById = (id, user, result) => {
-    sql.query(`USE rollcall;`);
     let select = `SELECT * FROM users WHERE id = ${id}`;
     sql.query(select, (err, res) => {
         if (err) {
@@ -235,7 +228,6 @@ User.updateById = (id, user, result) => {
 };
 
 User.remove = (id, result) => {
-    sql.query(`USE rollcall;`);
     sql.query("DELETE FROM users WHERE id = ?", id, (err, res) => {
         if (err) {
             console.log("error: ", err);
@@ -255,7 +247,6 @@ User.remove = (id, result) => {
 };
 
 User.removeAll = result => {
-    sql.query(`USE rollcall;`);
     sql.query("DELETE FROM users", (err, res) => {
         if (err) {
             console.log("error: ", err);
