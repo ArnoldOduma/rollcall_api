@@ -1,9 +1,10 @@
 const User = require("../models/user.model");
 const jwt = require('jsonwebtoken');
 const auth = require("../middleware/auth");
-require("dotenv").config();
 const ApiResponse = require('../classes/responseFormat.class');
+require("dotenv").config();
 
+const config = process.env;
 let session;
 
 // Create and Save a new Customer
@@ -15,11 +16,11 @@ exports.login = (req, res) => {
         });
     }
 
-    User.loginNew(req.body.email, req.body.password, (err, data) => {
+    User.login(req.body.email, req.body.password, (err, data) => {
         if (err) {
             if (err.kind === "not_found") {
                 res.status(404).send(new ApiResponse(
-                    `User with email ${req.body.email} was not found.`,
+                    `User with email ${req.body.email} was not found. If this is your first time here, register before logging in.`,
                     404
                 ))
             } else {
@@ -59,7 +60,6 @@ exports.create = (req, res) => {
         });
     }
 
-
     // Create a Customer
     const user = new User({
         email: req.body.email,
@@ -68,11 +68,10 @@ exports.create = (req, res) => {
         active: req.body.active,
         password: req.body.password,
         phone: req.body.phone,
-        current_sem: req.body.current_sem,
         user_type: req.body.user_type,
-        registration_number: req.body.registration_number
+        registration_number: req.body.registration_number,
+        current_sem_id: req.body.current_sem_id
     });
-
 
     // Save Customer in the database
     User.create(user, (err, data) => {
@@ -99,13 +98,15 @@ exports.findAll = (req, res) => {
 
 // Find a single Customer with a customerId
 exports.findOne = (req, res) => {
-    User.findById(req.params.studentId, (err, data) => {
+    User.findById(req.user.user_id, (err, data) => {
         if (err) {
             if (err.kind === "not_found") {
                 res.status(404).send({
-                    message: `Not found Student with id ${req.params.studentId}.`
+                    message: `Not found user with id ${req.params.studentId}.`
                 });
             } else {
+                if (res.statusCode === 404) {
+                }
                 res.status(500).send({
                     message: "Error retrieving Student with id " + req.params.studentId
                 });
@@ -123,23 +124,30 @@ exports.update = (req, res) => {
         });
     }
 
-    User.updateById(
-        req.params.studentId,
-        new User(req.body),
-        (err, data) => {
-            if (err) {
-                if (err.kind === "not_found") {
-                    res.status(404).send({
-                        message: `Student with id ${req.params.studentId}. not found.`
-                    });
-                } else {
-                    res.status(500).send({
-                        message: "Error updating Customer with id " + req.params.studentId
-                    });
-                }
-            } else res.send(data);
-        }
-    );
+    const incomingToken = req.headers["authorization"];
+    const token = incomingToken ? incomingToken.split(' ')[1] : null;
+
+    jwt.verify(token, config.TOKEN_KEY, function (err, decoded) {
+        User.updateById(
+            decoded.user_id,
+            new User(req.body),
+            (err, data) => {
+                if (err) {
+                    if (err.kind === "not_found") {
+                        res.status(404).send({
+                            message: `Student with id ${req.params.studentId}. not found.`
+                        });
+                    } else {
+                        res.status(500).send({
+                            message: "Error updating user with id " + req.params.studentId
+                        });
+                    }
+                } else res.send(data);
+            }
+        );
+    });
+
+
 };
 
 // Delete a Customer with the specified customerId in the request

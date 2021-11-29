@@ -1,10 +1,10 @@
 module.exports = app => {
     const classes = require("../controllers/classes.controller");
 
-    app.post("/classes", classes.create);
+    app.post("/rollcall/api/classes", classes.create);
 
     // // List all attendance
-    app.get("/classes", classes.findAll);
+    app.get("/rollcall/api/classes", classes.findAll);
     //
     // // Retrieve a single Customer with customerId
     // app.get("/students/:studentId", users.findOne);

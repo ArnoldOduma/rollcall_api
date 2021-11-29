@@ -1,13 +1,20 @@
 const sql = require('./db');
 const bcrypt = require('bcrypt');
 const ApiResponse = require('../classes/responseFormat.class');
-const saltRounds = 10;
+
+function getDate() {
+    let dateObj = new Date();
+    const month = dateObj.getUTCMonth() + 1;
+    const day = dateObj.getUTCDate();
+    const year = dateObj.getUTCFullYear();
+    return year + "-" + month + "-" + day;
+}
 
 const Attendance = function (attendance) {
     this.user_id = attendance.user_id;
     this.time_in = attendance.time_in;
     this.time_out = attendance.time_out;
-    this.date = attendance.date;
+    this.date = getDate();
     this.semester_id = attendance.semester_id;
     this.class_id = attendance.class_id;
 };
@@ -15,13 +22,14 @@ const Attendance = function (attendance) {
 Attendance.create = async (newAttendance, result) => {
     let select = `
         SELECT * FROM attendance
-        WHERE date = ? AND class_id = ? AND user_id = ?`;
-    sql.query(select, [newAttendance.date, newAttendance.class_id, newAttendance.user_id], (err, res) => {
+        WHERE CAST(date AS DATE) LIKE ? AND class_id = ? AND user_id = ?`;
+    sql.query(select, [getDate(), newAttendance.class_id, newAttendance.user_id], (err, res) => {
         if (err) {
             console.log("error: ", err);
             result(null, err);
             return [];
         } else {
+            console.log(res);
             if (res.length < 1) {
                 sql.query('INSERT INTO attendance SET ?', newAttendance, (err, res) => {
                     if (err) {
@@ -49,20 +57,77 @@ Attendance.create = async (newAttendance, result) => {
 
 Attendance.getAll = result => {
     sql.query(`USE rollcall;`);
-    let select = `SELECT * FROM attendance`;
+    let select = `SELECT * FROM attendance a
+    JOIN users u ON u.id = a.user_id
+    JOIN semester s ON s.id = a.semester_id
+    JOIN classes c ON c.id = a.class_id
+    `;
     sql.query(select, (err, res) => {
         if (err) {
             console.log("error: ", err);
             result(null, err);
             return;
         }
-
         console.log("users: ", res);
         result(null, new ApiResponse(
             'Fetched successfully',
             200,
             res
         ));
+    });
+};
+
+Attendance.findByUserId = async (id, result) => {
+    sql.query(`
+        SELECT * FROM attendance a 
+        JOIN users u ON u.id = a.user_id
+        JOIN semester s ON s.id = a.semester_id
+        JOIN classes c ON c.id = a.class_id
+        WHERE user_id = ?
+        ORDER BY date DESC`, [id], (err, res) => {
+        if (err) {
+            console.log("error: ", err);
+            result(err, null);
+            return;
+        }
+
+        if (res.length) {
+            console.log("found attendance: ", res);
+            const apiRes = new ApiResponse(
+                'Attendance fetched successfully',
+                200,
+                res
+            );
+            result(null, apiRes);
+            return res;
+        }
+
+        // not found Customer with the id
+        result({kind: "not_found"}, null);
+    });
+};
+
+Attendance.findByUserIdToday = async (id, result) => {
+    sql.query(`
+    SELECT *  FROM attendance WHERE user_id = ? AND CAST(date AS DATE) LIKE ?
+    ORDER BY date DESC`, [id, getDate()], (err, res) => {
+        if (err) {
+            result(err, null);
+            return;
+        }
+
+        if (res.length) {
+            const apiRes = new ApiResponse(
+                'Attendance fetched successfully',
+                200,
+                res
+            );
+            result(null, apiRes);
+            return res;
+        }
+
+        // not found Customer with the id
+        result({kind: "not_found"}, null);
     });
 };
 

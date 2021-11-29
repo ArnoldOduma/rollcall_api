@@ -1,0 +1,5 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/moneymin/rollcall/
+    - /bin/cp -R rollcall $DEPLOYPATH

@@ -1,9 +1,11 @@
+require("dotenv").config();
+
 module.exports = {
-    HOST: "localhost",
+    HOST: process.env.HOST,
     PORT: 3306,
-    USER: "root",
-    PASSWORD: "",
-    DB: "rollcall"
+    USER: process.env.DB_USER,
+    PASSWORD: process.env.DB_PASS,
+    DB: process.env.DB
 };
 // module.exports = {
 //     HOST: "http://sql102.epizy.com",

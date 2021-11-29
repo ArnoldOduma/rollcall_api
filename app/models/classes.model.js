@@ -1,7 +1,5 @@
 const sql = require('./db');
-const bcrypt = require('bcrypt');
 const ApiResponse = require('../classes/responseFormat.class');
-const saltRounds = 10;
 
 const Classes = function (classes) {
     this.title = classes.title;
@@ -30,13 +28,10 @@ Classes.create = async (newClass, result) => {
     });
 };
 
-
 Classes.getAll = result => {
-    // let select = `SELECT *, users.fname AS lecturer_first_name FROM classes
-    // JOIN users ON users.id = classes.lecturer_id`;
 
     let select = `
-    SELECT c.id, c.title, c.class_code, c.start_time, c.end_time, c.venue, c.lecture_day, u.fname As lecturer_fname, u.lname As lecturer_lname, u.id As lecturer_id, s.id As sem_id, s.number As sem_number, s.name As sem_name
+    SELECT c.id, c.title, c.class_code, c.start_time, c.end_time, c.venue, c.lecture_day, c.meeting_link, c.google_classroom_code, u.fname As lecturer_fname, u.lname As lecturer_lname, u.id As lecturer_id, s.id As sem_id, s.number As sem_number, s.name As sem_name
     FROM classes c
     JOIN users u ON u.id = c.lecturer_id
     JOIN semester s ON s.id = c.semester_id
@@ -49,14 +44,12 @@ Classes.getAll = result => {
             return;
         }
 
-        console.log("users: ", res);
         result(null, new ApiResponse(
-            'Fetched successfully',
+            'Fetched classes successfully',
             200,
             res
         ));
     });
 };
-
 
 module.exports = Classes;

@@ -1,26 +1,27 @@
+const cors = require('cors');
+const auth = require("../middleware/auth");
+
 module.exports = app => {
     const users = require("../controllers/user.controller.js");
 
     // Create a new Customer
-    app.post("/user", users.create);
+    app.post("/rollcall/api/user", users.create);
 
     // List all students
-    app.get("/users", users.findAll);
+    app.get("/rollcall/api/users", users.findAll);
 
     // Retrieve a single Customer with customerId
-    app.get("/user/:studentId", users.findOne);
+    app.get("/rollcall/api/user/me", auth, users.findOne);
 
     //Update
-    app.put("/user/:studentId", users.update);
+    app.put("/rollcall/api/user/:studentId", users.update);
 
     // Delete a Customer with customerId
-    app.delete("/user/:studentId", users.delete);
+    app.delete("/rollcall/api/user/:studentId", users.delete);
 
     // delete
-    app.delete("/users", users.deleteAll);
-
-
+    app.delete("/rollcall/api/users", users.deleteAll);
 
     // AUTHENTICATION
-    app.post("/login", users.login);
-}
+    app.post("/rollcall/api/login", cors(), users.login);
+};

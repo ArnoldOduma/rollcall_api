@@ -1,13 +1,9 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
-
-
 // create express app
 const app = express();
-
 
 const oneDay = 1000 * 60 * 60 * 24;
 app.use(session({
@@ -18,25 +14,27 @@ app.use(session({
 }));
 
 const corsOptions = {
-    origin: "http://localhost:5050"
+    // origin: "http://localhost:5050",
+    origin: 'http:localhost:4200',
+    "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+    "preflightContinue": false,
+    "optionsSuccessStatus": 204
 };
-app.use(cors(corsOptions));
-
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+// app.use(express.urlencoded({extended: true}));
 // // parse requests of content-type - application/x-www-form-urlencoded
 // app.use(bodyParser.urlencoded({extended: true}));
 // parse requests of content-type - application/json
 // app.use(bodyParser.json());
 
-app.use(cookieParser());
-
-
-// define a simple route
-app.get('/', (req, res) => {
-    res.json({"message": "Welcome to Roll call application. Take notes quickly. Organize and keep track of all your notes."});
+// app.use(cookieParser());
+app.get('/rollcall/api', (req, res) => {
+    res.json({
+        message: "Welcome to Roll call application. Take rollcall quickly. Organize and keep track of all your attendance records.",
+        statusCode: 200
+    });
 });
-
 require("./app/routes/user.routes")(app);
 require("./app/routes/attendance.routes")(app);
 require("./app/routes/classes.routes")(app);

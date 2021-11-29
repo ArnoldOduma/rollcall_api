@@ -15,48 +15,7 @@ const User = function (user) {
     this.registration_number = user.registration_number;
 };
 
-User.login = (email, password, result) => {
-    if (email && password) {
-        sql.query(`
-        SELECT *, s.name As semester  FROM users u
-        LEFT  JOIN semester s ON s.id = u.current_sem_id
-        WHERE email = ?`, [email], async (err, res) => {
-            if (err) {
-                console.log("error: ", err);
-                result(err, null);
-                return;
-            }
-            if (res.length > 0) {
-                console.log(res);
-                const comparison = await bcrypt.compare(password, res[0].password);
-                if (comparison) {
-                    const apiResponse = new ApiResponse(
-                        'You have successfully logged in',
-                        200,
-                        res[0]
-                    );
-                    result(null, apiResponse);
-
-                } else {
-                    result(null, new ApiResponse(
-                        'Email and password do not match',
-                        204
-                    ));
-                }
-            } else {
-                result({kind: "not_found"}, null);
-            }
-        });
-    } else {
-        result(null, new ApiResponse(
-            'Please enter a username ans password',
-            400
-        ));
-
-    }
-};
-
-User.loginNew = async (email, password, result) => {
+User.login = async (email, password, result) => {
 
     // Validate if user exist in our database
     await User.findByEmail(email, async (err, res) => {
@@ -69,73 +28,57 @@ User.loginNew = async (email, password, result) => {
                 );
                 result(null, apiResponse);
             } else {
-                result(null, new ApiResponse(
-                    'Email and password do not match',
+                result(err, new ApiResponse(
+                    'Email and password do not match!!',
                     204
                 ));
+                // return res.status(204).send(new ApiResponse(
+                //     'Email and password do not match!!',
+                //     204
+                // ));
+                // result(err, null);
             }
         } else {
             console.log("error: ", err);
             result(err, null);
         }
     });
-
-
-    // if (email && password) {
-    //     sql.query(`
-    //     SELECT *, s.name As semester  FROM users u
-    //     LEFT  JOIN semester s ON s.id = u.current_sem_id
-    //     WHERE email = ?`, [email], async (err, res) => {
-    //         if (err) {
-    //             console.log("error: ", err);
-    //             result(err, null);
-    //             return;
-    //         }
-    //         if (res.length > 0) {
-    //             console.log(res);
-    //             const comparison = await bcrypt.compare(password, res[0].password);
-    //             if (comparison) {
-    //                 const apiResponse = new ApiResponse(
-    //                     'You have successfully logged in',
-    //                     200,
-    //                     res[0]
-    //                 );
-    //                 result(null, apiResponse);
-    //
-    //             } else {
-    //                 result(null, new ApiResponse(
-    //                     'Email and password do not match',
-    //                     204
-    //                 ));
-    //             }
-    //         } else {
-    //             result({kind: "not_found"}, null);
-    //         }
-    //     });
-    // } else {
-    //     result(null, new ApiResponse(
-    //         'Please enter a username ans password',
-    //         400
-    //     ));
-    //
-    // }
 };
 
 User.create = async (newStudent, result) => {
-    const password = newStudent.password;
-    if (password) {
-        newStudent.password = await bcrypt.hash(password, saltRounds);
-    }
-    sql.query('INSERT INTO users SET ?', newStudent, (err, res) => {
-        if (err) {
-            console.log('Error', err);
-            result(err, null);
-            return;
-        }
 
-        console.log('Created Student', {id: res.insertId, ...newStudent});
-        result(null, {id: res.insertId, ...newStudent})
+    await User.findByEmail(newStudent.email, async (err, res) => {
+        if (res) {
+            console.log(res);
+            const apiResponse = new ApiResponse(
+                `User with email ${res.email} already exists. If this is you, kindly login with ${res.email} as your email and your password in the login screen`,
+                400,
+                res
+            );
+            result(null, apiResponse);
+
+        } else {
+            const password = newStudent.password;
+            if (password) {
+                newStudent.password = await bcrypt.hash(password, saltRounds);
+            }
+            sql.query('INSERT INTO users SET ?', newStudent, (err, res) => {
+                if (err) {
+                    console.log('Error', err);
+                    result(err, null);
+                    return;
+                }
+                const apiResponse = new ApiResponse(
+                    `You have been registered successfully. Login to proceed`,
+                    200,
+                    {id: res.insertId, ...newStudent}
+                );
+                result(null, apiResponse)
+            });
+        }
     });
+
+
 };
 
 User.getAll = result => {
@@ -152,27 +95,8 @@ User.getAll = result => {
     });
 };
 
-User.findById = (studentId, result) => {
-    sql.query(`SELECT * FROM users WHERE id = ${studentId}`, (err, res) => {
-        if (err) {
-            console.log("error: ", err);
-            result(err, null);
-            return;
-        }
-
-        if (res.length) {
-            console.log("found user: ", res[0]);
-            result(null, res[0]);
-            return;
-        }
-
-        // not found Customer with the id
-        result({kind: "not_found"}, null);
-    });
-};
-
-User.findByEmail = (email, result) => {
-    sql.query(`SELECT * FROM users WHERE email = ?`, [email], (err, res) => {
+User.findById = (id, result) => {
+    sql.query(`SELECT * FROM users WHERE id = ${id}`, (err, res) => {
         if (err) {
             console.log("error: ", err);
             result(err, null);
@@ -184,22 +108,42 @@ User.findByEmail = (email, result) => {
             result(null, res[0]);
             return res[0];
         }
+
         // not found Customer with the id
         result({kind: "not_found"}, null);
     });
 };
 
-User.updateById = (id, user, result) => {
-    let select = `SELECT * FROM users WHERE id = ${id}`;
-    sql.query(select, (err, res) => {
+User.findByEmail = (email, result) => {
+    let qry = `
+    SELECT u.id, u.email, u.password, u.fname, u.lname, u.phone, u.active, u.registration_number, u.user_type, u.current_sem_id, u.timestamp, s.name AS semester
+    FROM users u
+    INNER JOIN semester s
+    ON (s.id = u.current_sem_id or u.current_sem_id is NULL)
+    WHERE email = ?`;
+    sql.query(qry, [email], (err, res) => {
         if (err) {
             console.log("error: ", err);
-            result(null, err);
+            result(err, null);
             return;
         }
 
-        if (res.length > 0) {
-            let currentVal = res[0];
+        if (res.length) {
+            console.log("found user: ", res[0]);
+            result(null, res[0]);
+            return res[0];
+        }
+        console.log(err);
+        // not found Customer with the id
+        result({kind: "not_found"}, null);
+    });
+
+};
+
+User.updateById = (id, user, result) => {
+    User.findById(id, (err, res) => {
+        if (res) {
+            let currentVal = res;
             sql.query(
                 `UPDATE ${sql.escapeId('rollcall.users')} SET email = ?, password = ?, fname = ?, lname = ?, active = ?, phone = ?, current_sem_id = ?, user_type = ?, registration_number = ? WHERE id = ?`,
                 [user.email || currentVal.email, user.password || currentVal.password, user.fname || currentVal.fname, user.lname || currentVal.lname, user.active || currentVal.active, user.phone || currentVal.phone, user.current_sem_id || currentVal.current_sem_id, user.user_type || currentVal.user_type, user.registration_number || currentVal.registration_number, id],
@@ -215,7 +159,6 @@ User.updateById = (id, user, result) => {
                         return;
                     }
 
-                    console.log("Updated user: ", {id: id, ...user});
                     result(null, new ApiResponse(
                         'User Updated successfully',
                         200,
@@ -223,8 +166,12 @@ User.updateById = (id, user, result) => {
                     ));
                 }
             );
+        } else {
+            console.log("error: ", err);
+            result(null, err);
         }
     });
+
 };
 
 User.remove = (id, result) => {
@@ -241,7 +188,6 @@ User.remove = (id, result) => {
             return;
         }
 
-        console.log("deleted user with id: ", id);
         result(null, res);
     });
 };
@@ -257,6 +203,5 @@ User.removeAll = result => {
         result(null, res);
     });
 };
-
 
 module.exports = User;

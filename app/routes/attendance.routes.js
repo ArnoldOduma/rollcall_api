@@ -5,13 +5,16 @@ const router = express.Router();
 module.exports = app => {
     const attendance = require("../controllers/attendance.controller");
     app.use(auth);
-    app.post("/attendance", attendance.create);
+    app.post("/rollcall/api/attendance", attendance.create);
     // // List all attendance
-    app.get("/attendance", attendance.findAll);
+    app.get("/rollcall/api/attendance", attendance.findAll);
     //
-    // // Retrieve a single Customer with customerId
-    // app.get("/students/:studentId", users.findOne);
-    //
+    // Retrieve attendance by user
+    app.get("/rollcall/api/attendance/me", attendance.findByUser);
+
+    // Retrieve attendance by user
+    app.get("/rollcall/api/attendance/me/today", attendance.findByUserToday);
+
     // //Update
     // app.put("/students/:studentId", users.update);
     //
