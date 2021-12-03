@@ -4,9 +4,9 @@ const ApiResponse = require('../classes/responseFormat.class');
 
 function getDate() {
     let dateObj = new Date();
-    const month = dateObj.getUTCMonth() + 1;
-    const day = dateObj.getUTCDate();
-    const year = dateObj.getUTCFullYear();
+    const month = ("0" + (dateObj.getMonth() + 1)).slice(-2);
+    const day = ("0" + dateObj.getDate()).slice(-2);
+    const year = dateObj.getFullYear();
     return year + "-" + month + "-" + day;
 }
 
@@ -20,6 +20,7 @@ const Attendance = function (attendance) {
 };
 
 Attendance.create = async (newAttendance, result) => {
+    console.log("date----------------------------------", getDate());
     let select = `
         SELECT * FROM attendance
         WHERE CAST(date AS DATE) LIKE ? AND class_id = ? AND user_id = ?`;
@@ -108,9 +109,10 @@ Attendance.findByUserId = async (id, result) => {
 };
 
 Attendance.findByUserIdToday = async (id, result) => {
+    const date = await getDate();
     sql.query(`
     SELECT *  FROM attendance WHERE user_id = ? AND CAST(date AS DATE) LIKE ?
-    ORDER BY date DESC`, [id, getDate()], (err, res) => {
+    ORDER BY date DESC`, [id, date], (err, res) => {
         if (err) {
             result(err, null);
             return;

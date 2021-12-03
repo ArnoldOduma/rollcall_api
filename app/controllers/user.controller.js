@@ -1,4 +1,5 @@
 const User = require("../models/user.model");
+const Mail = require("../_util/sendMail");
 const jwt = require('jsonwebtoken');
 const auth = require("../middleware/auth");
 const ApiResponse = require('../classes/responseFormat.class');
