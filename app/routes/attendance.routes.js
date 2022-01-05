@@ -15,6 +15,10 @@ module.exports = app => {
     // Retrieve attendance by user
     app.get("/rollcall/api/attendance/me/today", attendance.findByUserToday);
 
+    app.get("/rollcall/api/attendance/me/class/:id", attendance.findByUserPerClass);
+
+    app.get("/rollcall/api/attendance/class/:id", attendance.findByClass);
+
     // //Update
     // app.put("/students/:studentId", users.update);
     //

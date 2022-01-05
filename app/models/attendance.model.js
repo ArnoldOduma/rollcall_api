@@ -20,7 +20,6 @@ const Attendance = function (attendance) {
 };
 
 Attendance.create = async (newAttendance, result) => {
-    console.log("date----------------------------------", getDate());
     let select = `
         SELECT * FROM attendance
         WHERE CAST(date AS DATE) LIKE ? AND class_id = ? AND user_id = ?`;
@@ -108,12 +107,70 @@ Attendance.findByUserId = async (id, result) => {
     });
 };
 
+Attendance.findByUserIdPerClass = async (id, class_id, result) => {
+    sql.query(`
+        SELECT * FROM attendance a 
+        JOIN users u ON u.id = a.user_id
+        JOIN semester s ON s.id = a.semester_id
+        JOIN classes c ON c.id = a.class_id
+        WHERE user_id = ? AND class_id = ?
+        ORDER BY date DESC`, [id, class_id], (err, res) => {
+        if (err) {
+            console.log("error: ", err);
+            result(err, null);
+            return;
+        }
+
+        if (res.length) {
+            console.log("found attendance: ", res);
+            const apiRes = new ApiResponse(
+                'Attendance per class fetched successfully',
+                200,
+                res
+            );
+            result(null, apiRes);
+            return res;
+        }
+
+        // not found Customer with the id
+        result({kind: "not_found"}, null);
+    });
+};
+
 Attendance.findByUserIdToday = async (id, result) => {
     const date = await getDate();
     sql.query(`
     SELECT *  FROM attendance WHERE user_id = ? AND CAST(date AS DATE) LIKE ?
     ORDER BY date DESC`, [id, date], (err, res) => {
         if (err) {
+            result(err, null);
+            return;
+        }
+
+        if (res.length) {
+            const apiRes = new ApiResponse(
+                'Attendance fetched successfully',
+                200,
+                res
+            );
+            result(null, apiRes);
+            return res;
+        }
+
+        // not found Customer with the id
+        result({kind: "not_found"}, null);
+    });
+};
+
+Attendance.findByClassCode = async (class_id, result) => {
+    const date = await getDate();
+    sql.query(`
+    SELECT * FROM attendance a
+    JOIN users u ON u.id = a.user_id
+    WHERE class_id = ?
+    ORDER BY date DESC`, [class_id], (err, res) => {
+        if (err) {
+            console.log(err);
             result(err, null);
             return;
         }

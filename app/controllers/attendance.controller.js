@@ -72,6 +72,25 @@ exports.findByUser = (req, res) => {
     });
 };
 
+// Find a single Customer with a customerId
+exports.findByUserPerClass = (req, res) => {
+    Attendance.findByUserIdPerClass(req.user.user_id, req.params.id, (err, data) => {
+        if (err) {
+            if (err.kind === "not_found") {
+                res.status(404).send({
+                    message: `Attendance for user with id ${req.user.user_id} for class wih id ${req.params.id} not found.`
+                });
+            } else {
+                if (res.statusCode === 404) {
+                }
+                res.status(500).send({
+                    message: "Error retrieving Student with id " + req.params.id
+                });
+            }
+        } else res.send(data);
+    }).then();
+};
+
 exports.findByUserToday = (req, res) => {
     Attendance.findByUserIdToday(req.user.user_id, (err, data) => {
         if (err) {
@@ -87,5 +106,23 @@ exports.findByUserToday = (req, res) => {
                 });
             }
         } else res.send(data);
-    });
+    }).then();
+};
+
+exports.findByClass = (req, res) => {
+    Attendance.findByClassCode(req.params.id, (err, data) => {
+        if (err) {
+            if (err.kind === "not_found") {
+                res.status(404).send({
+                    message: `Attendance was not found!`
+                });
+            } else {
+                if (res.statusCode === 404) {
+                }
+                res.status(500).send({
+                    message: "Error retrieving Attendance"
+                });
+            }
+        } else res.send(data);
+    }).then();
 };

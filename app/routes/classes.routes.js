@@ -1,10 +1,20 @@
+const auth = require("../middleware/auth");
+
 module.exports = app => {
     const classes = require("../controllers/classes.controller");
-
+    app.use(auth);
     app.post("/rollcall/api/classes", classes.create);
 
-    // // List all attendance
+    app.post("/rollcall/api/user-classes", classes.createUserClasses);
+    // List all attendance
     app.get("/rollcall/api/classes", classes.findAll);
+    // get user classes
+    app.get("/rollcall/api/user-classes", classes.findUserClasses);
+    // Get logged in user classes
+    app.get("/rollcall/api/user-classes/me", classes.findCurrentUserClassesByID);
+    //get user classes by id
+    app.get("/rollcall/api/user-classes/:id", classes.findUserClassesByID);
+
     //
     // // Retrieve a single Customer with customerId
     // app.get("/students/:studentId", users.findOne);
