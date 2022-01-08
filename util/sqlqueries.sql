@@ -56,10 +56,13 @@ CREATE TABLE user_classes (
     id int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
     user_id int NOT NULL,
     class_id int NOT NULL,
+    semester_id int NOT NULL,
     active tinyint(1) DEFAULT 0,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT FK_user_classes_id FOREIGN KEY (user_id)
     REFERENCES users(id),
     CONSTRAINT FK_class_user_id FOREIGN KEY (class_id)
     REFERENCES classes(id)
+    CONSTRAINT FK_class_semester_id FOREIGN KEY (class_id)
+    REFERENCES semester(id)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

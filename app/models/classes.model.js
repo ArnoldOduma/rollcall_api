@@ -148,4 +148,29 @@ Classes.getUserClassesByUserId = async (id, result) => {
     });
 };
 
+Classes.deleteUserClass = async (id, result) => {
+    sql.query(`
+        DELETE
+        FROM user_classes
+        WHERE id = ?
+        `, [id], (err, res) => {
+        if (err) {
+            console.log("error: ", err);
+            result(err, null);
+            return;
+        }
+
+        if (res) {
+            const apiRes = new ApiResponse(
+                'Class deleted from user',
+                200
+            );
+            result(null, apiRes);
+            return res;
+        } else {
+            result({kind: "not_found"}, null);
+        }
+    });
+};
+
 module.exports = Classes;

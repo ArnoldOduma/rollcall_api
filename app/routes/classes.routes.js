@@ -5,15 +5,22 @@ module.exports = app => {
     app.use(auth);
     app.post("/rollcall/api/classes", classes.create);
 
-    app.post("/rollcall/api/user-classes", classes.createUserClasses);
+
     // List all attendance
     app.get("/rollcall/api/classes", classes.findAll);
+
+
+    //USER CLASSES
+    app.post("/rollcall/api/user-classes", classes.createUserClasses);
     // get user classes
     app.get("/rollcall/api/user-classes", classes.findUserClasses);
     // Get logged in user classes
     app.get("/rollcall/api/user-classes/me", classes.findCurrentUserClassesByID);
     //get user classes by id
     app.get("/rollcall/api/user-classes/:id", classes.findUserClassesByID);
+    //Delete user class
+    app.delete("/rollcall/api/user-classes/:id", classes.deleteUserClassesByID);
+
 
     //
     // // Retrieve a single Customer with customerId
